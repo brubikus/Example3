@@ -1,0 +1,88 @@
+SERVICE /PPPoE/IPTV/SIP/IMS/STATIC: sip
+IP SOFTSWITCH: *.*.*.30
+IP SIP-CLIENT: *.*.*.20
+MASK: 255.255.255.0
+IP DEFAULT GW: *.*.*.1
+PHONE NUMBER: 2*****4
+Edit port olt-2-2 oos
+edit port gsx-0-b1 oos
+config
+interface ONT-2-2-64
+grant 3 256 128 512 VoIP
+end
+edit ont ONT-2-2-64 oos
+copy profile ont voipmeprf-def voipmeprf-usi
+copy profile ont voipfc-def voipfc-usi
+copy profile ont voipasp-def voipasp-usi
+copy profile ont sipvf-def sipvf-usi
+Edit port olt-2-2 oos
+edit port gsx-0-b1 oos
+config
+int gsx-0-b1
+vlan 395 arp-learn
+vlan 395 mac-learn
+exit
+edit pack ap-2 oos
+conf
+int ap-2
+exit
+edit pack ap-2 is
+config
+profile ont voipmeprf-usi
+voip-media cs1 pcma
+voip-media cs2 pcma
+voip-media cs3 pcma
+voip-media cs4 pcma
+voip-media pps1 20
+voip-media pps2 20
+voip-media pps3 20
+voip-media pps4 20
+voice pvar ru
+exit
+Configure
+ont ONT-2-2-64
+br brdg-3
+br brdg-3 port iphc-0
+gem 3 1638 pon2488-1 brdg-3
+vlan iphc-0 395 qinq strip
+sipua sipua-1  *.*.*.30 *.*.*.30 5060 UDP
+sipvf sipua-1 vf0-2-1 2****4
+sipauth vf0-2-1 md5 2****4 2****4 ""
+voip media voipmeprf-1 voipmeprf-usi
+voip link voipmeprf-1 vf0-2-1
+exit
+Edit port olt-2-2 oos
+edit port gsx-0-b1 oos
+enter crs gem 1638 olt-2-2 gsx-0-b1 xlat 0
+conf
+ont ONT-2-2-64 iphc-0
+ipo 6
+ip *.*.*.20
+mask 255.255.255.0
+gateway *.*.*.1
+exit
+
+SERVICE /PPPoE/IPTV/SIP/IMS/STATIC: no sip
+TLF=[2****4], SW=[*.*.*.30]
+edit port olt-2-2 oos
+Configure
+int ONT-2-2-64
+end
+ont ONT-2-2-64
+no vlan iphc-0
+no sipauth vf0-2-1
+no sipvf sipua-1 vf0-2-1 2****4
+no sipua sipua-1  *.*.*.30 *.*.*.30
+no voip media voipmeprf-1
+no voip asp voipasp-1
+no voip fc voipfc-1
+no gem 3 1638 pon2488-1 brdg-3
+no bridge BRDG-3 port iphc-0
+no bridge BRDG-3
+end
+Edit port olt-2-2 oos
+edit port gsx-0-b1 oos
+exit
+delete crs gem 1638 olt-2-2 gsx-0-b1
+edit port gsx-0-b1 is
+Edit port olt-2-2 is
